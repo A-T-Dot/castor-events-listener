@@ -1,0 +1,12 @@
+{
+  "name": "castor-events-listener",
+  "version": "1.0.0",
+  "main": "server.js",
+  "repository": "git@github.com:A-T-Dot/castor-events-listener.git",
+  "license": "MIT",
+  "dependencies": {
+    "@polkadot/api": "^0.91.1",
+    "dotenv": "^8.1.0",
+    "mongodb": "^3.3.2"
+  }
+}
