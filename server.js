@@ -1,9 +1,13 @@
 const { ApiPromise } = require("@polkadot/api");
+const mongo = require("./mongo");
 
 require("dotenv").config();
 
 
 async function main() {
+  // Connect MongoDB
+  await mongo.connect();
+
   // Create our API with a default connection to the local node
   const api = await ApiPromise.create({
     types: {
