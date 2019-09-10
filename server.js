@@ -1,4 +1,4 @@
-const { ApiPromise } = require("@polkadot/api");
+const { ApiPromise, WsProvider } = require("@polkadot/api");
 const mongo = require("./mongo");
 
 require("dotenv").config();
@@ -7,6 +7,9 @@ require("dotenv").config();
 async function main() {
   // Connect MongoDB
   await mongo.connect();
+
+  // Initialise the provider to connect to the local node
+  const provider = new WsProvider(`ws://${process.env.SUBSTRATE_HOST}:${process.env.SUBSTRATE_PORT}`);
 
   // Create our API with a default connection to the local node
   const api = await ApiPromise.create({
@@ -17,14 +20,16 @@ async function main() {
         prev: "Option<KittyIndex>",
         next: "Option<KittyIndex>"
       }
-    }
+    },
+    provider
   });
 
-  api.query.system.events(events => {
+  
+  api.query.system.events(async (events) => {
     console.log(`\nReceived ${events.length} events:`);
 
     // loop through the Vec<EventRecord>
-    events.forEach(record => {
+    events.forEach(async (record) => {
       // extract the phase, event and the event types
       const { event, phase } = record;
       const types = event.typeDef;
@@ -39,6 +44,16 @@ async function main() {
       event.data.forEach((data, index) => {
         console.log(`\t\t\t${types[index].type}: ${data.toString()}`);
       });
+
+      const eventObj = {
+        section: event.section,
+        method: event.method,
+        meta: event.meta.documentation.toString(),
+        data: event.data.toString()
+      }
+
+      // insert to mongo db
+      await mongo.insert(eventObj)
     });
   });
 }
