@@ -1,9 +1,16 @@
-const { ApiPromise } = require("@polkadot/api");
+const { ApiPromise, WsProvider } = require("@polkadot/api");
+const mongo = require("./mongo");
 
 require("dotenv").config();
 
 
 async function main() {
+  // Connect MongoDB
+  await mongo.connect();
+
+  // Initialise the provider to connect to the local node
+  const provider = new WsProvider(`ws://${process.env.SUBSTRATE_HOST}:${process.env.SUBSTRATE_PORT}`);
+
   // Create our API with a default connection to the local node
   const api = await ApiPromise.create({
     types: {
@@ -13,28 +20,55 @@ async function main() {
         prev: "Option<KittyIndex>",
         next: "Option<KittyIndex>"
       }
-    }
+    },
+    provider
   });
 
-  api.query.system.events(events => {
-    console.log(`\nReceived ${events.length} events:`);
+  // Event Filter
+  let eventsFilter;
+  if(process.env.SUBSTRTAE_EVENT_SECTIONS) {
+    eventsFilter = process.env.SUBSTRTAE_EVENT_SECTIONS.split(',')
+  } else {
+    eventsFilter = ["all"]
+  }
+
+  
+  api.query.system.events(async (events) => {
 
     // loop through the Vec<EventRecord>
-    events.forEach(record => {
+    events.forEach(async (record) => {
       // extract the phase, event and the event types
       const { event, phase } = record;
       const types = event.typeDef;
 
+      // filter event section
+      if (
+        !(eventsFilter.includes(event.section.toString()) ||
+        eventsFilter.includes("all"))
+      ) {
+        return;
+      }
+
       // show what we are busy with
       console.log(
-        `\t${event.section}:${event.method}:: (phase=${phase.toString()})`
+        `\n${event.section}:${event.method}:: (phase=${phase.toString()})`
       );
-      console.log(`\t\t${event.meta.documentation.toString()}`);
+      console.log(`\t${event.meta.documentation.toString()}`);
 
       // loop through each of the parameters, displaying the type and data
       event.data.forEach((data, index) => {
-        console.log(`\t\t\t${types[index].type}: ${data.toString()}`);
+        console.log(`\t\t${types[index].type}: ${data.toString()}`);
       });
+
+      const eventObj = {
+        section: event.section,
+        method: event.method,
+        meta: event.meta.documentation.toString(),
+        data: event.data.toString()
+      }
+
+      // insert to mongo db
+      await mongo.insert(eventObj)
     });
   });
 }
