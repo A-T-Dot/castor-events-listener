@@ -24,9 +24,16 @@ async function main() {
     provider
   });
 
+  // Event Filter
+  let eventsFilter;
+  if(process.env.SUBSTRTAE_EVENT_SECTIONS) {
+    eventsFilter = process.env.SUBSTRTAE_EVENT_SECTIONS.split(',')
+  } else {
+    eventsFilter = ["all"]
+  }
+
   
   api.query.system.events(async (events) => {
-    console.log(`\nReceived ${events.length} events:`);
 
     // loop through the Vec<EventRecord>
     events.forEach(async (record) => {
@@ -34,15 +41,23 @@ async function main() {
       const { event, phase } = record;
       const types = event.typeDef;
 
+      // filter event section
+      if (
+        !(eventsFilter.includes(event.section.toString()) ||
+        eventsFilter.includes("all"))
+      ) {
+        return;
+      }
+
       // show what we are busy with
       console.log(
-        `\t${event.section}:${event.method}:: (phase=${phase.toString()})`
+        `\n${event.section}:${event.method}:: (phase=${phase.toString()})`
       );
-      console.log(`\t\t${event.meta.documentation.toString()}`);
+      console.log(`\t${event.meta.documentation.toString()}`);
 
       // loop through each of the parameters, displaying the type and data
       event.data.forEach((data, index) => {
-        console.log(`\t\t\t${types[index].type}: ${data.toString()}`);
+        console.log(`\t\t${types[index].type}: ${data.toString()}`);
       });
 
       const eventObj = {
