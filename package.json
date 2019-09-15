@@ -9,6 +9,9 @@
     "@polkadot/keyring": "^1.1.1",
     "@polkadot/util": "^1.1.1",
     "dotenv": "^8.1.0",
+    "koa": "^2.8.1",
+    "koa-route": "^3.2.0",
+    "koa-websocket": "^6.0.0",
     "mongodb": "^3.3.2"
   }
 }

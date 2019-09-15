@@ -1,147 +1,21 @@
-const { ApiPromise, WsProvider } = require('@polkadot/api');
-const { Keyring } = require('@polkadot/keyring');
-const { stringToU8a } = require('@polkadot/util');
+const Koa = require('koa'),
+  route = require('koa-route'),
+  // https://github.com/kudos/koa-websocket
+  websockify = require('koa-websocket');
+const chain = require('./chain');
 
-let api = null;
-let tcrApi = null;
+const app = websockify(new Koa());
 
-// https://github.com/substrate-developer-hub/substrate-tcr
-// https://github.com/substrate-developer-hub/substrate-tcr-ui/blob/master/src/services/tcrService.js
-
-const init = async (wsp, callback, subscribe) => {
-  const provider = new WsProvider(wsp);
-  api = await ApiPromise.create(provider);
-
-  api.rpc.system.chain();
-  api.rpc.chain.subscribeNewHeads(header => {
-    subscribe(header);
-  });
-
-  tcrApi = await ApiPromise.create({
-    types: {
-      Listing: {
-        id: 'u32',
-        data: 'Vec<u8>',
-        deposit: 'Balance',
-        owner: 'AccountId',
-        application_expiry: 'Moment',
-        whitelisted: 'bool',
-        challenge_id: 'u32'
-      },
-      Challenge: {
-        listing_hash: 'Hash',
-        deposit: 'Balance',
-        owner: 'AccountId',
-        voting_ends: 'Moment',
-        resolved: 'bool',
-        reward_pool: 'Balance',
-        total_tokens: 'Balance'
-      },
-      Poll: {
-        listing_hash: 'Hash',
-        votes_for: 'Balance',
-        votes_against: 'Balance',
-        passed: 'bool'
-      },
-      Vote: {
-        value: 'bool',
-        deposit: 'Balance',
-        claimed: 'bool'
-      },
-      TokenBalance: 'u128'
-    }
-  });
-
-  callback(api);
-};
-
-const getBalance = async (address, callback) => {
-  const currentBalance = await api.query.balances.freeBalance(address);
-  callback(currentBalance.toString());
-};
-
-const getBalances = async (addresses, callback) => {
-  const currentBalances = await api.query.balances.freeBalance.multi(addresses);
-  const balancesMap = {};
-  currentBalances.forEach((item, index) => {
-    balancesMap[addresses[index]] = item.toString();
-  });
-  callback(balancesMap);
-};
-
-const transfer = async (addressFrom, addressTo, amount) => {
-  const fromPair = keyring.getPair(addressFrom);
-  api.tx.balances
-    .transfer(addressTo, amount)
-    .signAndSend(fromPair, ({ status }) => {
-      if (status.isFinalized) {
-        setStatus(`Completed at block hash #${status.asFinalized.toString()}`);
-      } else {
-        setStatus(`Current transfer status: ${status.type}`);
-      }
-    })
-    .catch(e => {
-      setStatus(':( transaction failed');
-      console.error('ERROR:', e);
-    });
-};
-
-const getKeysFromSeed = _seed => {
-  if (!_seed) {
-    throw new Error('Seed not valid.');
-  }
-
-  const keyring = new Keyring({ type: 'sr25519' });
-  const paddedSeed = _seed.padEnd(32);
-  return keyring.addFromSeed(stringToU8a(paddedSeed));
-};
-
-async function _createApiWithTypes () {
-  return await ApiPromise.create({
-    types: {
-      Listing: {
-        id: 'u32',
-        data: 'Vec<u8>',
-        deposit: 'Balance',
-        owner: 'AccountId',
-        application_expiry: 'Moment',
-        whitelisted: 'bool',
-        challenge_id: 'u32'
-      },
-      Challenge: {
-        listing_hash: 'Hash',
-        deposit: 'Balance',
-        owner: 'AccountId',
-        voting_ends: 'Moment',
-        resolved: 'bool',
-        reward_pool: 'Balance',
-        total_tokens: 'Balance'
-      },
-      Poll: {
-        listing_hash: 'Hash',
-        votes_for: 'Balance',
-        votes_against: 'Balance',
-        passed: 'bool'
-      },
-      Vote: {
-        value: 'bool',
-        deposit: 'Balance',
-        claimed: 'bool'
-      },
-      TokenBalance: 'u128'
-    }
-  });
-}
+let WS = null;
 
 const PROVIDER = 'ws://127.0.0.1:9944';
 // const PROVIDER = 'wss://polkadot:9944';
-init(PROVIDER, run, subscribe);
 
 function run () {
   console.log('Start.');
   // get balance or other function
   const demoAddr = '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY'
-  getBalance(
+  chain.getBalance(
     demoAddr,
     (balance) => {
       console.log(`${demoAddr} balance: ${balance}`);
@@ -149,14 +23,27 @@ function run () {
   );
 }
 
-function subscribe (header) {
-  console.log(`Chain is at #${header.number}`);
+function subscribe (header, WS) {
+  // TODO save to db
+  WS.send(`{"data": "Chain is at #${header.number}"}`);
+  console.log(`Chain is at #${header.number}`)
 }
 
-// terminal console:
+app.ws.use(route.all('/ws', (ctx) => {
+  // TODO query from db, ws push
+  WS = ctx.websocket 
+  WS.send('{"data": "Hello Castor"}');
+  chain.init(PROVIDER, run, subscribe, WS);
 
-// Start.
-// 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY balance: 1130921504606846966
-// Chain is at #6189
-// Chain is at #6190
-// Chain is at #6191
+  WS.on('message', function (message) {
+    console.log(message);
+  });
+}));
+
+app.use(route
+  .get('/call', (ctx) => {
+    ctx.body = 'Hello Castor';
+  })
+);
+
+app.listen(7000);
