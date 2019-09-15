@@ -29,6 +29,14 @@ function subscribe (header, WS) {
   console.log(`Chain is at #${header.number}`)
 }
 
+app.use(async (ctx, next) => {
+  ctx.set('Access-Control-Allow-Origin', '*');
+  ctx.set('Access-Control-Allow-Headers', '*');
+  ctx.set('Access-Control-Allow-Methods', 'PUT, POST, GET, DELETE, OPTIONS');
+  ctx.set('Cache-Control', 'no-cache');
+  await next();
+})
+
 app.ws.use(route.all('/ws', (ctx) => {
   // TODO query from db, ws push
   WS = ctx.websocket 
@@ -42,7 +50,7 @@ app.ws.use(route.all('/ws', (ctx) => {
 
 app.use(route
   .get('/call', (ctx) => {
-    ctx.body = 'Hello Castor';
+    ctx.body = { data: 'Call Castor' };
   })
 );
 
