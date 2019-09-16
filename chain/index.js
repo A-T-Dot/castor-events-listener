@@ -97,14 +97,6 @@ const getKeysFromSeed = _seed => {
   return keyring.addFromSeed(stringToU8a(paddedSeed));
 };
 
-// terminal console:
-
-// Start.
-// 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY balance: 1130921504606846966
-// Chain is at #6189
-// Chain is at #6190
-// Chain is at #6191
-
 module.exports = {
   init,
   getBalance,
