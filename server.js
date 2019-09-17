@@ -69,13 +69,12 @@ async function main() {
 
   // Event Filter
   let eventsFilter;
-  if(process.env.SUBSTRTAE_EVENT_SECTIONS) {
-    eventsFilter = process.env.SUBSTRTAE_EVENT_SECTIONS.split(',')
+  if (process.env.SUBSTRATE_EVENT_SECTIONS) {
+    eventsFilter = process.env.SUBSTRATE_EVENT_SECTIONS.split(",");
   } else {
-    eventsFilter = ["all"]
+    eventsFilter = ["all"];
   }
 
-  
   api.query.system.events(async (events) => {
 
     // loop through the Vec<EventRecord>
@@ -89,7 +88,7 @@ async function main() {
         !(eventsFilter.includes(event.section.toString()) ||
         eventsFilter.includes("all"))
       ) {
-        return;
+        // return;
       }
 
       // show what we are busy with
@@ -99,15 +98,26 @@ async function main() {
       console.log(`\t${event.meta.documentation.toString()}`);
 
       // loop through each of the parameters, displaying the type and data
-      event.data.forEach((data, index) => {
-        console.log(`\t\t${types[index].type}: ${data.toString()}`);
-      });
+      // event.data.forEach((data, index) => {
+      //   console.log(`\t\t${types[index].type}: ${data.toString()}`);
+      // });
+      
+
+
+      let data = event.data.map((parameter, index) => {
+        console.log(`\t\t${types[index].type}: ${parameter.toString()}`);
+        if(types[index].type == "VecContentHash") {
+          return parameter.map((x) => x.toString());
+        } else {
+          return parameter.toString();
+        }
+      })
 
       const eventObj = {
         section: event.section,
         method: event.method,
         meta: event.meta.documentation.toString(),
-        data: event.data.toString()
+        data
       }
 
       // insert to mongo db
