@@ -14,12 +14,55 @@ async function main() {
   // Create our API with a default connection to the local node
   const api = await ApiPromise.create({
     types: {
-      Kitty: "[u8; 16]",
-      KittyIndex: "u32",
-      KittyLinkedItem: {
-        prev: "Option<KittyIndex>",
-        next: "Option<KittyIndex>"
-      }
+      ContentHash: "[u8; 32]",
+      NodeType: "u32",
+      Node: {
+        id: "ContentHash",
+        node_type: "NodeType",
+        sources: "Vec<ContentHash>"
+      },
+      GeId: "u64",
+      ActionId: "u64",
+      TcxId: "u64",
+      GovernanceEntity: {
+        threshold: "u64",
+        min_deposit: "Balance",
+        apply_stage_len: "Moment",
+        commit_stage_len: "Moment"
+      },
+      Challenge: {
+        amount: "Balance",
+        voting_ends: "Moment",
+        resolved: "bool",
+        reward_pool: "Balance",
+        total_tokens: "Balance",
+        owner: "AccountId"
+      },
+      ChallengeId: "u64",
+      ListingId: "u64",
+      Listing: {
+        id: "ListingId",
+        node_id: "ContentHash",
+        amount: "Balance",
+        application_expiry: "Moment",
+        whitelisted: "bool",
+        challenge_id: "ChallengeId",
+        owner: "AccountId"
+      },
+      Poll: {
+        votes_for: "Balance",
+        votes_against: "Balance",
+        passed: "bool"
+      },
+      Tcx: {
+        tcx_type: "u64"
+      },
+      TcxType: "u64",
+      Link: {
+        source: "u32",
+        target: "u32"
+      },
+      VecContentHash: "Vec<ContentHash>"
     },
     provider
   });
