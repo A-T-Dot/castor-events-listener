@@ -107,6 +107,150 @@ mongo.geInvested = async function(data) {
   await db.collection("ge").updateOne(query, newValue);
 };
 
+mongo.tcxCreated = async function(data) {
+  let geId = data[0].toString();
+  let tcxId = data[1].toString();
+  let value = {
+    owner: geId, tcxId, nodes: []
+  }
+  await db.collection("tcx").insertOne(value);
+
+}
+
+mongo.tcxProposed = async function(data) {
+  let proposer = data[0].toString();
+  let tcxId = data[1].toString();
+  let nodeId = data[2].toString();
+  let amount = data[3].toNumber();
+  let quota = data[4].toNumber();
+  let actionId = data[5].toString();
+
+  // proposed amount like stake not invest? where money go?
+
+  let value = {
+    proposer,
+    tcxId,
+    nodeId,
+    amountLeft: amount,
+    quotaLeft: quota,
+    amountRight: 0,
+    quotaRight: 0,
+    actionId,
+    status: 0
+  };
+
+  await db.collection("proposal").insertOne(value);
+};
+
+// TODO: possible to update old challenges instead?
+mongo.tcxChallenged = async function(data) {
+  let challenger = data[0].toString();
+  let tcxId = data[1].toString();
+  let nodeId = data[2].toString();
+  let amount = data[3].toNumber();
+  let quota = data[4].toNumber();
+  let challengeId;  // TODO: add challengerId to substrate
+
+  let query = {
+    tcxId: tcxId,
+    nodeId: nodeId,
+    status: 0
+  }
+
+
+  let newValue = {
+    $set: { status: 1, proposer, challenger, challengeId, amountRight: amount, quotaRight: quota, voters: []}
+  };
+  
+  await db.collection("proposal").updateOne(query, newValue);
+
+};
+
+mongo.tcxVoted = async function(data) {
+  let voter = data[0].toString();
+  let challengeId = data[1].toString();
+  let amount = data[2].toNumber();
+  let quota = data[3].toNumber();
+  let whitelist = data[4].toNumber();
+  
+  let query = {
+    tcxId: tcxId,
+    nodeId: nodeId,
+    challengeId: challengeId,
+    status: 1
+  };
+
+  let newValue;
+  if(whitelist) {
+    newValue = {
+      $inc: { amountLeft: amount, quotaLeft: quota },
+      $push: { voters: voter }
+    }
+  } else {
+    newValue = {
+      $inc: { amountRight: amount, quotaRight: quota },
+      $push: { voters: voter }
+    };
+  }
+
+  await db.collection("proposal").updateOne(query, newValue);
+
+};
+
+mongo.tcxAccepted = async function(data) {
+  let tcxId = data[0].toString();
+  let nodeId = data[1].toString();
+  
+  let tcxQuery = {
+    tcxId: tcxId
+  };
+
+  let tcxNewValue = {
+    $push: { nodes: nodeId }
+  };
+
+  let proposalQuery = {
+    tcxId: tcxId,
+    nodeId: nodeId,
+    status: 1
+  }
+  
+  let proposalNewValue = {
+    $set: { status: 2 }
+  }
+
+  await db.collection("tcx").updateOne(tcxQuery, tcxNewValue);
+  await db.collection("proposal").updateOne(proposalQuery, proposalNewValue);
+};
+
+mongo.tcxRejected = async function(data) {
+  let tcxId = data[0].toString();
+  let nodeId = data[1].toString();
+
+  let query = {
+    tcxId: tcxId,
+    nodeId: nodeId,
+    status: 1
+  };
+
+  let newValue = {
+    $set: { status: 2 }
+  }
+
+  await db.collection("proposal").updateOne(query, newValue);
+
+};
+
+mongo.tcxResolved = async function(data) {
+  // let challengedId = data[0].toString();
+  
+};
+
+mongo.tcxClaimed = async function(data) {
+  let claimer = data[0].toString();
+  let challengedId = data[1].toString();
+  // TODO: claim prize
+};
 
 
 

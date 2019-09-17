@@ -34,4 +34,7 @@ db.event_data.find()
 - Maintain block height, deal with sync issues.
 - Integer might overflow in mongodb.
 
+### Notes
+- uses string for integers that do not need to be compared
+
 

@@ -125,20 +125,29 @@ async function main() {
       } else if(event.section == 'tcx') {
         switch (event.method) {
           case "Created":
+            mongo.tcxCreated(event.data);
             break;
           case "Proposed":
+            mongo.tcxProposed(event.data);
             break;
           case "Challenged":
+            mongo.tcxChallenged(event.data);
             break;
           case "Voted":
+            mongo.tcxVoted(event.data);
             break;
           case "Accepted":
+            mongo.tcxAccepted(event.data);
             break;
           case "Rejected":
+            mongo.tcxRejected(event.data);
             break;
           case "Resolved":
-            break
-
+            mongo.tcxResolved(event.data);
+            break;
+          case "Claimed":
+            mongo.tcxClaimed(event.data);
+            break;
         }
 
       }
