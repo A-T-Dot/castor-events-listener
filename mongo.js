@@ -74,9 +74,38 @@ mongo.nodeTransferred = async function(data) {
 };
 
 // ge
-mongo.geCreated = async function(data) {};
-mongo.geStaked = async function(data) {};
-mongo.geInvested = async function(data) {};
+mongo.geCreated = async function(data) {
+  let creator = data[0].toString();
+  let geId = data[1].toString();
+  let tcxs = [];
+  let totalStaked = 0;
+  let invested = data[2].toNumber();
+  let totalInvested = invested;
+  let value = {
+    geId, tcxs, totalStaked, totalInvested, members: {
+      [creator]: { staked: 0, invested: invested }
+    }
+  }
+  await db.collection("ge").insertOne(value);
+};
+mongo.geStaked = async function(data) {
+  let staker = data[0].toString();
+  let geId = data[1].toString();
+  let staked = data[2].toNumber();
+  let query = { geId: geId };
+  let newValue = { "$inc": { totalStaked: staked, [`members.${staker}.staked`]: staked}};
+  await db.collection("ge").updateOne(query, newValue);
+};
+mongo.geInvested = async function(data) {
+  let investor = data[0].toString();
+  let geId = data[1].toString();
+  let invested = data[2].toNumber();
+  let query = { geId: geId };
+  let newValue = {
+    $inc: { totalInvested: invested, [`members.${staker}.invested`]: invested }
+  };
+  await db.collection("ge").updateOne(query, newValue);
+};
 
 
 

@@ -113,13 +113,13 @@ async function main() {
       } else if(event.section == 'ge') {
         switch (event.method) {
           case "Created":
-            mongo.geCreated();
+            mongo.geCreated(event.data);
             break;
           case "Staked":
-            mongo.geStaked();
+            mongo.geStaked(event.data);
             break;
           case "Invested":
-            mongo.geInvested();
+            mongo.geInvested(event.data);
             break;
         }
       } else if(event.section == 'tcx') {

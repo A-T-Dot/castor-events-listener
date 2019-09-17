@@ -32,5 +32,6 @@ db.event_data.find()
 
 ### TODO
 - Maintain block height, deal with sync issues.
+- Integer might overflow in mongodb.
 
 
