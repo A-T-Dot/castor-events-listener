@@ -101,9 +101,51 @@ async function main() {
       // event.data.forEach((data, index) => {
       //   console.log(`\t\t${types[index].type}: ${data.toString()}`);
       // });
-      
+      if (event.section == "node") {
+        switch (event.method) {
+          case "Created":
+            mongo.nodeCreated(event.data);
+            break;
+          case "Transferred":
+            mongo.nodeTransferred(event.data);
+            break;
+        }
+      } else if(event.section == 'ge') {
+        switch (event.method) {
+          case "Created":
+            mongo.geCreated();
+            break;
+          case "Staked":
+            mongo.geStaked();
+            break;
+          case "Invested":
+            mongo.geInvested();
+            break;
+        }
+      } else if(event.section == 'tcx') {
+        switch (event.method) {
+          case "Created":
+            break;
+          case "Proposed":
+            break;
+          case "Challenged":
+            break;
+          case "Voted":
+            break;
+          case "Accepted":
+            break;
+          case "Rejected":
+            break;
+          case "Resolved":
+            break
+
+        }
+
+      }
 
 
+
+      // log to events
       let data = event.data.map((parameter, index) => {
         console.log(`\t\t${types[index].type}: ${parameter.toString()}`);
         if(types[index].type == "VecContentHash") {
