@@ -62,7 +62,8 @@ async function main() {
         source: "u32",
         target: "u32"
       },
-      VecContentHash: "Vec<ContentHash>"
+      VecContentHash: "Vec<ContentHash>",
+      Quota: "Balance"
     },
     provider
   });

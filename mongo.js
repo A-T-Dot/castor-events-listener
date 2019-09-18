@@ -83,7 +83,7 @@ mongo.geCreated = async function(data) {
   let totalInvested = invested;
   let value = {
     geId, tcxs, totalStaked, totalInvested, members: {
-      [creator]: { staked: 0, invested: invested }
+      [creator]: { invested: invested }
     }
   }
   await db.collection("ge").insertOne(value);
@@ -102,7 +102,7 @@ mongo.geInvested = async function(data) {
   let invested = data[2].toNumber();
   let query = { geId: geId };
   let newValue = {
-    $inc: { totalInvested: invested, [`members.${staker}.invested`]: invested }
+    $inc: { totalInvested: invested, [`members.${investor}.invested`]: invested }
   };
   await db.collection("ge").updateOne(query, newValue);
 };
@@ -110,9 +110,14 @@ mongo.geInvested = async function(data) {
 mongo.tcxCreated = async function(data) {
   let geId = data[0].toString();
   let tcxId = data[1].toString();
+  let tcxType = data[2].toString(); // TODO: add to substrate
+
   let value = {
-    owner: geId, tcxId, nodes: []
-  }
+    owner: geId,
+    tcxId,
+    nodes: [],
+    tcxType
+  };
   await db.collection("tcx").insertOne(value);
 
 }
@@ -145,26 +150,31 @@ mongo.tcxProposed = async function(data) {
 // TODO: possible to update old challenges instead?
 mongo.tcxChallenged = async function(data) {
   let challenger = data[0].toString();
-  let tcxId = data[1].toString();
-  let nodeId = data[2].toString();
-  let amount = data[3].toNumber();
-  let quota = data[4].toNumber();
-  let challengeId;  // TODO: add challengerId to substrate
+  let challengeId = data[1].toString();
+  let tcxId = data[2].toString();
+  let nodeId = data[3].toString();
+  let amount = data[4].toNumber();
+  let quota = data[5].toNumber();
 
   let query = {
     tcxId: tcxId,
     nodeId: nodeId,
     status: 0
-  }
-
+  };
 
   let newValue = {
-    $set: { status: 1, proposer, challenger, challengeId, amountRight: amount, quotaRight: quota, voters: []}
+    $set: {
+      status: 1,
+      challenger,
+      challengeId,
+      amountRight: amount,
+      quotaRight: quota,
+      voters: []
+    }
   };
-  
-  await db.collection("proposal").updateOne(query, newValue);
 
-};
+  await db.collection("proposal").updateOne(query, newValue);
+};;
 
 mongo.tcxVoted = async function(data) {
   let voter = data[0].toString();
@@ -174,8 +184,6 @@ mongo.tcxVoted = async function(data) {
   let whitelist = data[4].toNumber();
   
   let query = {
-    tcxId: tcxId,
-    nodeId: nodeId,
     challengeId: challengeId,
     status: 1
   };
@@ -212,11 +220,11 @@ mongo.tcxAccepted = async function(data) {
   let proposalQuery = {
     tcxId: tcxId,
     nodeId: nodeId,
-    status: 1
+    $or: [{status: 0}, {status: 1}]
   }
   
   let proposalNewValue = {
-    $set: { status: 2 }
+    $set: { status: 3}
   }
 
   await db.collection("tcx").updateOne(tcxQuery, tcxNewValue);
@@ -234,7 +242,7 @@ mongo.tcxRejected = async function(data) {
   };
 
   let newValue = {
-    $set: { status: 2 }
+    $set: { status: 4, whitelist: false }
   }
 
   await db.collection("proposal").updateOne(query, newValue);
