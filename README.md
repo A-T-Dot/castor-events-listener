@@ -1,11 +1,16 @@
 # castor-events-listener
+- Store castor network events to MongoDB.
 
-## Usage
+## Setup
 ```
 1. yarn install
-2. start mongodb daemon
-3. start substrate chain
-4. yarn start
+```
+
+## Run
+```
+1. start mongodb daemon
+2. run substrate castor
+3. yarn start
 ```
 
 ## .env Configuration
