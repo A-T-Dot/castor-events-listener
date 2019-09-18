@@ -14,25 +14,68 @@ async function main() {
   // Create our API with a default connection to the local node
   const api = await ApiPromise.create({
     types: {
-      Kitty: "[u8; 16]",
-      KittyIndex: "u32",
-      KittyLinkedItem: {
-        prev: "Option<KittyIndex>",
-        next: "Option<KittyIndex>"
-      }
+      ContentHash: "[u8; 32]",
+      NodeType: "u32",
+      Node: {
+        id: "ContentHash",
+        node_type: "NodeType",
+        sources: "Vec<ContentHash>"
+      },
+      GeId: "u64",
+      ActionId: "u64",
+      TcxId: "u64",
+      GovernanceEntity: {
+        threshold: "u64",
+        min_deposit: "Balance",
+        apply_stage_len: "Moment",
+        commit_stage_len: "Moment"
+      },
+      Challenge: {
+        amount: "Balance",
+        voting_ends: "Moment",
+        resolved: "bool",
+        reward_pool: "Balance",
+        total_tokens: "Balance",
+        owner: "AccountId"
+      },
+      ChallengeId: "u64",
+      ListingId: "u64",
+      Listing: {
+        id: "ListingId",
+        node_id: "ContentHash",
+        amount: "Balance",
+        application_expiry: "Moment",
+        whitelisted: "bool",
+        challenge_id: "ChallengeId",
+        owner: "AccountId"
+      },
+      Poll: {
+        votes_for: "Balance",
+        votes_against: "Balance",
+        passed: "bool"
+      },
+      Tcx: {
+        tcx_type: "u64"
+      },
+      TcxType: "u64",
+      Link: {
+        source: "u32",
+        target: "u32"
+      },
+      VecContentHash: "Vec<ContentHash>",
+      Quota: "Balance"
     },
     provider
   });
 
   // Event Filter
   let eventsFilter;
-  if(process.env.SUBSTRTAE_EVENT_SECTIONS) {
-    eventsFilter = process.env.SUBSTRTAE_EVENT_SECTIONS.split(',')
+  if (process.env.SUBSTRATE_EVENT_SECTIONS) {
+    eventsFilter = process.env.SUBSTRATE_EVENT_SECTIONS.split(",");
   } else {
-    eventsFilter = ["all"]
+    eventsFilter = ["all"];
   }
 
-  
   api.query.system.events(async (events) => {
 
     // loop through the Vec<EventRecord>
@@ -46,7 +89,7 @@ async function main() {
         !(eventsFilter.includes(event.section.toString()) ||
         eventsFilter.includes("all"))
       ) {
-        return;
+        // return;
       }
 
       // show what we are busy with
@@ -56,15 +99,77 @@ async function main() {
       console.log(`\t${event.meta.documentation.toString()}`);
 
       // loop through each of the parameters, displaying the type and data
-      event.data.forEach((data, index) => {
-        console.log(`\t\t${types[index].type}: ${data.toString()}`);
-      });
+      // event.data.forEach((data, index) => {
+      //   console.log(`\t\t${types[index].type}: ${data.toString()}`);
+      // });
+      if (event.section == "node") {
+        switch (event.method) {
+          case "Created":
+            mongo.nodeCreated(event.data);
+            break;
+          case "Transferred":
+            mongo.nodeTransferred(event.data);
+            break;
+        }
+      } else if(event.section == 'ge') {
+        switch (event.method) {
+          case "Created":
+            mongo.geCreated(event.data);
+            break;
+          case "Staked":
+            mongo.geStaked(event.data);
+            break;
+          case "Invested":
+            mongo.geInvested(event.data);
+            break;
+        }
+      } else if(event.section == 'tcx') {
+        switch (event.method) {
+          case "Created":
+            mongo.tcxCreated(event.data);
+            break;
+          case "Proposed":
+            mongo.tcxProposed(event.data);
+            break;
+          case "Challenged":
+            mongo.tcxChallenged(event.data);
+            break;
+          case "Voted":
+            mongo.tcxVoted(event.data);
+            break;
+          case "Accepted":
+            mongo.tcxAccepted(event.data);
+            break;
+          case "Rejected":
+            mongo.tcxRejected(event.data);
+            break;
+          case "Resolved":
+            mongo.tcxResolved(event.data);
+            break;
+          case "Claimed":
+            mongo.tcxClaimed(event.data);
+            break;
+        }
+
+      }
+
+
+
+      // log to events
+      let data = event.data.map((parameter, index) => {
+        console.log(`\t\t${types[index].type}: ${parameter.toString()}`);
+        if(types[index].type == "VecContentHash") {
+          return parameter.map((x) => x.toString());
+        } else {
+          return parameter.toString();
+        }
+      })
 
       const eventObj = {
         section: event.section,
         method: event.method,
         meta: event.meta.documentation.toString(),
-        data: event.data.toString()
+        data
       }
 
       // insert to mongo db
