@@ -59,7 +59,7 @@ mongo.nodeCreated = async function(data) {
   let nodeId = data[1].toString();
   let nodeType = data[2].toString();
   let sources = data[3].map(x => x.toString());
-  await db.collection("node").insertOne({
+  await db.collection("nodes").insertOne({
     owner, nodeId, nodeType, sources
   });
 }
@@ -70,23 +70,23 @@ mongo.nodeTransferred = async function(data) {
   let query = { nodeId: nodeId };
   let newValue = { $set: { owner: newOwner } };
 
-  await db.collection("node").updateOne(query, newValue);
+  await db.collection("nodes").updateOne(query, newValue);
 };
 
 // ge
 mongo.geCreated = async function(data) {
   let creator = data[0].toString();
   let geId = data[1].toString();
-  let tcxs = [];
+  let tcxIds = [];
   let totalStaked = 0;
   let invested = data[2].toNumber();
   let totalInvested = invested;
   let value = {
-    geId, tcxs, totalStaked, totalInvested, members: {
+    geId, tcxIds, totalStaked, totalInvested, members: {
       [creator]: { invested: invested }
     }
   }
-  await db.collection("ge").insertOne(value);
+  await db.collection("ges").insertOne(value);
 };
 mongo.geStaked = async function(data) {
   let staker = data[0].toString();
@@ -94,7 +94,7 @@ mongo.geStaked = async function(data) {
   let staked = data[2].toNumber();
   let query = { geId: geId };
   let newValue = { "$inc": { totalStaked: staked, [`members.${staker}.staked`]: staked}};
-  await db.collection("ge").updateOne(query, newValue);
+  await db.collection("ges").updateOne(query, newValue);
 };
 mongo.geInvested = async function(data) {
   let investor = data[0].toString();
@@ -104,21 +104,28 @@ mongo.geInvested = async function(data) {
   let newValue = {
     $inc: { totalInvested: invested, [`members.${investor}.invested`]: invested }
   };
-  await db.collection("ge").updateOne(query, newValue);
+  await db.collection("ges").updateOne(query, newValue);
 };
 
 mongo.tcxCreated = async function(data) {
   let geId = data[0].toString();
   let tcxId = data[1].toString();
-  let tcxType = data[2].toString(); // TODO: add to substrate
+  let tcxType = data[2].toString(); 
 
   let value = {
     owner: geId,
     tcxId,
-    nodes: [],
+    nodeIds: [],
     tcxType
   };
-  await db.collection("tcx").insertOne(value);
+  await db.collection("tcxs").insertOne(value);
+
+  // update ge
+  let query = { geId: geId };
+  let newValue = {
+    $push: { tcxIds: tcxId }
+  };
+  await db.collection("ges").updateOne(query, newValue);
 
 }
 
@@ -144,7 +151,7 @@ mongo.tcxProposed = async function(data) {
     status: 0
   };
 
-  await db.collection("proposal").insertOne(value);
+  await db.collection("proposals").insertOne(value);
 };
 
 // TODO: possible to update old challenges instead?
@@ -173,7 +180,7 @@ mongo.tcxChallenged = async function(data) {
     }
   };
 
-  await db.collection("proposal").updateOne(query, newValue);
+  await db.collection("proposals").updateOne(query, newValue);
 };;
 
 mongo.tcxVoted = async function(data) {
@@ -201,7 +208,7 @@ mongo.tcxVoted = async function(data) {
     };
   }
 
-  await db.collection("proposal").updateOne(query, newValue);
+  await db.collection("proposals").updateOne(query, newValue);
 
 };
 
@@ -214,7 +221,7 @@ mongo.tcxAccepted = async function(data) {
   };
 
   let tcxNewValue = {
-    $push: { nodes: nodeId }
+    $push: { nodeIds: nodeId }
   };
 
   let proposalQuery = {
@@ -227,8 +234,8 @@ mongo.tcxAccepted = async function(data) {
     $set: { status: 3}
   }
 
-  await db.collection("tcx").updateOne(tcxQuery, tcxNewValue);
-  await db.collection("proposal").updateOne(proposalQuery, proposalNewValue);
+  await db.collection("tcxs").updateOne(tcxQuery, tcxNewValue);
+  await db.collection("proposals").updateOne(proposalQuery, proposalNewValue);
 };
 
 mongo.tcxRejected = async function(data) {
@@ -245,7 +252,7 @@ mongo.tcxRejected = async function(data) {
     $set: { status: 4, whitelist: false }
   }
 
-  await db.collection("proposal").updateOne(query, newValue);
+  await db.collection("proposals").updateOne(query, newValue);
 
 };
 
