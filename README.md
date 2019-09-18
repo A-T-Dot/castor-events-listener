@@ -32,5 +32,10 @@ db.event_data.find()
 
 ### TODO
 - Maintain block height, deal with sync issues.
+- Integer might overflow in mongodb.
+- check if challenging multiple times might cause bug
+
+### Notes
+- uses string for integers that do not need to be compared
 
 
