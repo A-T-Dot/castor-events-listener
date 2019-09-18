@@ -274,7 +274,12 @@ mongo.tcxResolved = async function(data) {
 
 mongo.tcxClaimed = async function(data) {
   let claimer = data[0].toString();
-  let challengedId = data[1].toString();
+  let challengeId = data[1].toString();
+
+  let query = {
+    challengeId: challengeId,
+  };
+
   // TODO: claim prize
 };
 
