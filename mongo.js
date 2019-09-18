@@ -60,7 +60,18 @@ mongo.nodeCreated = async function(data) {
   let nodeType = data[2].toString();
   let sources = data[3].map(x => x.toString());
   await db.collection("nodes").insertOne({
-    owner, nodeId, nodeType, sources
+    owner,
+    nodeId,
+    nodeType,
+    sources,
+    referredBy: []
+  });
+
+  // update referred nodes
+  await sources.forEach(async (source) => {
+    let query = { nodeId: source };
+    let newValue = { $push: { referredBy: nodeId } };
+    await db.collection("nodes").updateOne(query, newValue);
   });
 }
 
