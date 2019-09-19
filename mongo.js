@@ -91,7 +91,7 @@ mongo.geCreated = async function(data) {
   let tcxIds = [];
   let totalStaked = 0;
   let invested = data[2].toNumber();
-  let metadata = data[3].toString();
+  let contentHash = data[3].toString();
   let totalInvested = invested;
   let value = {
     geId,
@@ -101,7 +101,7 @@ mongo.geCreated = async function(data) {
     members: {
       [creator]: { invested: invested }
     },
-    metadata
+    contentHash
   };
   await db.collection("ges").insertOne(value);
 };
@@ -128,14 +128,14 @@ mongo.tcxCreated = async function(data) {
   let geId = data[0].toString();
   let tcxId = data[1].toString();
   let tcxType = data[2].toString(); 
-  let metadata = data[3].toString();
+  let contentHash = data[3].toString();
 
   let value = {
     owner: geId,
     tcxId,
     nodeIds: [],
     tcxType,
-    metadata,
+    contentHash,
   };
   await db.collection("tcxs").insertOne(value);
 
