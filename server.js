@@ -14,7 +14,7 @@ async function main() {
   // Create our API with a default connection to the local node
   const api = await ApiPromise.create({
     types: {
-      ContentHash: "[u8; 32]",
+      ContentHash: "Hash",
       NodeType: "u32",
       Node: {
         id: "ContentHash",
@@ -28,7 +28,8 @@ async function main() {
         threshold: "u64",
         min_deposit: "Balance",
         apply_stage_len: "Moment",
-        commit_stage_len: "Moment"
+        commit_stage_len: "Moment",
+        content_hash: "ContentHash"
       },
       Challenge: {
         amount: "Balance",
@@ -55,7 +56,8 @@ async function main() {
         passed: "bool"
       },
       Tcx: {
-        tcx_type: "u64"
+        tcx_type: "u64",
+        content_hash: "ContentHash"
       },
       TcxType: "u64",
       Link: {
