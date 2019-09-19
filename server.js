@@ -14,7 +14,7 @@ async function main() {
   // Create our API with a default connection to the local node
   const api = await ApiPromise.create({
     types: {
-      ContentHash: "[u8; 32]",
+      ContentHash: "Hash",
       NodeType: "u32",
       Node: {
         id: "ContentHash",
@@ -63,7 +63,8 @@ async function main() {
         target: "u32"
       },
       VecContentHash: "Vec<ContentHash>",
-      Quota: "Balance"
+      Quota: "Balance",
+      Metadata: "Hash"
     },
     provider
   });
