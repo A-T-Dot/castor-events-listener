@@ -60,6 +60,7 @@ mongo.nodeCreated = async function(data) {
   let nodeType = data[2].toString();
   let sources = data[3].map(x => x.toString());
   await db.collection("nodes").insertOne({
+    _id: nodeId,
     owner,
     nodeId,
     nodeType,
@@ -94,6 +95,7 @@ mongo.geCreated = async function(data) {
   let contentHash = data[3].toString();
   let totalInvested = invested;
   let value = {
+    _id: geId,
     geId,
     tcxIds,
     totalStaked,
@@ -131,6 +133,7 @@ mongo.tcxCreated = async function(data) {
   let contentHash = data[3].toString();
 
   let value = {
+    _id: tcxId,
     owner: geId,
     tcxId,
     nodeIds: [],
