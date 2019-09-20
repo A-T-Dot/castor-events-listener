@@ -266,7 +266,7 @@ mongo.tcxAccepted = async function(data) {
   }
   
   let proposalNewValue = {
-    $set: { status: 3, updatedAt: now }
+    $set: { status: 3, updatedAt: now, claimed: [] }
   }
 
   await db.collection("tcxs").updateOne(tcxQuery, tcxNewValue);
@@ -286,7 +286,7 @@ mongo.tcxRejected = async function(data) {
   };
 
   let newValue = {
-    $set: { status: 4, whitelist: false, updatedAt: now }
+    $set: { status: 4, updatedAt: now, claimed: [] }
   }
 
   await db.collection("proposals").updateOne(query, newValue);
@@ -307,6 +307,11 @@ mongo.tcxClaimed = async function(data) {
   };
 
   // TODO: claim prize
+  let newValue = {
+    $push: { claimed: claimer },
+  };
+
+  await db.collection("proposals").updateOne(query, newValue);
 };
 
 
