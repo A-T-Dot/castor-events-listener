@@ -222,7 +222,7 @@ mongo.tcxVoted = async function(data) {
   let challengeId = data[1].toString();
   let amount = data[2].toNumber();
   let quota = data[3].toNumber();
-  let whitelist = data[4].toNumber();
+  let whitelist = data[4].toString();
   
   let query = {
     challengeId: challengeId,
@@ -230,7 +230,7 @@ mongo.tcxVoted = async function(data) {
   };
 
   let newValue;
-  if(whitelist) {
+  if(whitelist == "true") {
     newValue = {
       $inc: { amountLeft: amount, quotaLeft: quota },
       $push: { voters: voter },
@@ -317,7 +317,118 @@ mongo.tcxClaimed = async function(data) {
   await db.collection("proposals").updateOne(query, newValue);
 };
 
+mongo.nonTransferAssetsCreated = async function(data) {
+  let assetId = data[0].toString();
+  let accountId = data[1].toString();
+  // let assetOptions = data[2].toString();
 
+  // TODO: 
+}
 
+mongo.nonTransferAssetsMinted = async function(data) {
+  let assetId = data[0].toString();
+  let accountId = data[1].toString();
+  let balance = data[2].toNumber();
+
+  let query = {
+    accountId: accountId
+  };
+
+  let newValue = {
+    $inc: { [`${assetId}`]: balance }
+  };
+
+  await db.collection("accounts").updateOne(query, newValue, { upsert: true});
+};
+
+mongo.nonTransferAssetsBurned = async function(data) {
+  let assetId = data[0].toString();
+  let accountId = data[1].toString();
+  let balance = data[2].toNumber();
+
+  let query = {
+    accountId: accountId
+  };
+
+  let newValue = {
+    $set: { accountId: accountId},
+    $inc: { [`${assetId}`]: -balance }
+  };
+
+  await db.collection("accounts").updateOne(query, newValue, { upsert: true });
+};
+
+mongo.balancesNewAccount = async function(data) {
+  // TODO: Needed?
+  // let accountId = data[0].toString();
+  // let balance = data[1].toNumber();
+
+  // let query = {
+  //   accountId: accountId
+  // };
+
+  // let newValue = {
+  //   $set: { accountId: accountId },
+  //   $inc: { balance: balance }
+  // };
+
+  // await db.collection("accounts").updateOne(query, newValue, { upsert: true });
+
+}
+
+mongo.balancesReapedAccount = async function(data) {
+  let accountId = data[0].toString();
+
+  let query = {
+    accountId: accountId
+  };
+
+  // TODO
+};
+
+mongo.balancesTransfer = async function(data) {
+  let accountIdFrom = data[0].toString();
+  let accountIdTo = data[1].toString();
+  let value = data[2].toNumber();
+  let fees = data[3].toNumber();
+
+  let liability = value + fees;
+
+  let queryFrom = {
+    accountId: accountIdFrom
+  };
+
+  let newValueFrom = {
+    $set: { accountId: accountIdFrom },
+    $inc: { balance: -liability }
+  };
+
+  let queryTo = {
+    accountId: accountIdTo
+  };
+
+  let newValueTo = {
+    $set: { accountId: accountIdTo },
+    $inc: { balance: value }
+  };
+
+  await db.collection("accounts").updateOne(queryFrom, newValueFrom, { upsert: true });
+  await db.collection("accounts").updateOne(queryTo, newValueTo, { upsert: true });
+
+};
+
+mongo.balancesMint = async function(accountId, balance) {
+  let query = {
+    accountId: accountId
+  };
+
+  let newValue = {
+    $set: { accountId: accountId, balance: balance }
+  };
+
+  await db
+    .collection("accounts")
+    .updateOne(query, newValue, { upsert: true });
+}
 
 module.exports = mongo;
