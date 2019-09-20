@@ -60,6 +60,7 @@ mongo.nodeCreated = async function(data) {
   let nodeType = data[2].toString();
   let sources = data[3].map(x => x.toString());
   await db.collection("nodes").insertOne({
+    _id: nodeId,
     owner,
     nodeId,
     nodeType,
@@ -91,9 +92,10 @@ mongo.geCreated = async function(data) {
   let tcxIds = [];
   let totalStaked = 0;
   let invested = data[2].toNumber();
-  let metadata = data[3].toString();
+  let contentHash = data[3].toString();
   let totalInvested = invested;
   let value = {
+    _id: geId,
     geId,
     tcxIds,
     totalStaked,
@@ -101,7 +103,7 @@ mongo.geCreated = async function(data) {
     members: {
       [creator]: { invested: invested }
     },
-    metadata
+    contentHash
   };
   await db.collection("ges").insertOne(value);
 };
@@ -128,14 +130,15 @@ mongo.tcxCreated = async function(data) {
   let geId = data[0].toString();
   let tcxId = data[1].toString();
   let tcxType = data[2].toString(); 
-  let metadata = data[3].toString();
+  let contentHash = data[3].toString();
 
   let value = {
+    _id: tcxId,
     owner: geId,
     tcxId,
     nodeIds: [],
     tcxType,
-    metadata,
+    contentHash,
   };
   await db.collection("tcxs").insertOne(value);
 
@@ -149,12 +152,15 @@ mongo.tcxCreated = async function(data) {
 }
 
 mongo.tcxProposed = async function(data) {
+  let now = Date.now();
+
   let proposer = data[0].toString();
   let tcxId = data[1].toString();
   let nodeId = data[2].toString();
   let amount = data[3].toNumber();
   let quota = data[4].toNumber();
   let actionId = data[5].toString();
+  let challengeBefore = data[6].toNumber();
 
   // proposed amount like stake not invest? where money go?
 
@@ -167,7 +173,9 @@ mongo.tcxProposed = async function(data) {
     amountRight: 0,
     quotaRight: 0,
     actionId,
-    status: 0
+    challengeBefore,
+    status: 0,
+    updatedAt: now,
   };
 
   await db.collection("proposals").insertOne(value);
@@ -175,12 +183,15 @@ mongo.tcxProposed = async function(data) {
 
 // TODO: possible to update old challenges instead?
 mongo.tcxChallenged = async function(data) {
+  let now = Date.now();
+
   let challenger = data[0].toString();
   let challengeId = data[1].toString();
   let tcxId = data[2].toString();
   let nodeId = data[3].toString();
   let amount = data[4].toNumber();
   let quota = data[5].toNumber();
+  let voteBefore = data[6].toNumber();
 
   let query = {
     tcxId: tcxId,
@@ -193,9 +204,11 @@ mongo.tcxChallenged = async function(data) {
       status: 1,
       challenger,
       challengeId,
+      voteBefore,
       amountRight: amount,
       quotaRight: quota,
-      voters: []
+      voters: [],
+      updatedAt: now
     }
   };
 
@@ -203,6 +216,8 @@ mongo.tcxChallenged = async function(data) {
 };;
 
 mongo.tcxVoted = async function(data) {
+  let now = Date.now();
+
   let voter = data[0].toString();
   let challengeId = data[1].toString();
   let amount = data[2].toNumber();
@@ -218,12 +233,14 @@ mongo.tcxVoted = async function(data) {
   if(whitelist) {
     newValue = {
       $inc: { amountLeft: amount, quotaLeft: quota },
-      $push: { voters: voter }
+      $push: { voters: voter },
+      $set: { updatedAt: now}
     }
   } else {
     newValue = {
       $inc: { amountRight: amount, quotaRight: quota },
-      $push: { voters: voter }
+      $push: { voters: voter },
+      $set: { updatedAt: now }
     };
   }
 
@@ -232,6 +249,8 @@ mongo.tcxVoted = async function(data) {
 };
 
 mongo.tcxAccepted = async function(data) {
+  let now = Date.now();
+
   let tcxId = data[0].toString();
   let nodeId = data[1].toString();
   
@@ -250,7 +269,7 @@ mongo.tcxAccepted = async function(data) {
   }
   
   let proposalNewValue = {
-    $set: { status: 3}
+    $set: { status: 3, updatedAt: now, claimed: [] }
   }
 
   await db.collection("tcxs").updateOne(tcxQuery, tcxNewValue);
@@ -258,6 +277,8 @@ mongo.tcxAccepted = async function(data) {
 };
 
 mongo.tcxRejected = async function(data) {
+  let now = Date.now();
+
   let tcxId = data[0].toString();
   let nodeId = data[1].toString();
 
@@ -268,7 +289,7 @@ mongo.tcxRejected = async function(data) {
   };
 
   let newValue = {
-    $set: { status: 4, whitelist: false }
+    $set: { status: 4, updatedAt: now, claimed: [] }
   }
 
   await db.collection("proposals").updateOne(query, newValue);
@@ -289,6 +310,11 @@ mongo.tcxClaimed = async function(data) {
   };
 
   // TODO: claim prize
+  let newValue = {
+    $push: { claimed: claimer },
+  };
+
+  await db.collection("proposals").updateOne(query, newValue);
 };
 
 
