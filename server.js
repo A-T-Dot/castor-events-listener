@@ -78,6 +78,24 @@ async function main() {
     eventsFilter = ["all"];
   }
 
+  if(process.env.DEBUG_MODE == "ON") {
+    // Alice
+    await mongo.balancesMint(
+      "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+      1152921504606846976
+    );
+    // Bob
+    await mongo.balancesMint(
+      "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+      1152921504606846976
+    );
+    // Charlie
+    await mongo.balancesMint(
+      "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y",
+      1152921504606846976
+    );
+  }
+
   api.query.system.events(async (events) => {
 
     // loop through the Vec<EventRecord>
@@ -153,6 +171,30 @@ async function main() {
             break;
         }
 
+      } else if(event.section == 'nonTransferAssets') {
+        switch (event.method) {
+          case "Created":
+            mongo.nonTransferAssetsCreated(event.data);
+            break;
+          case "Minted":
+            mongo.nonTransferAssetsMinted(event.data);
+            break;
+          case "Burned":
+            mongo.nonTransferAssetsBurned(event.data);
+            break;
+        }
+      } else if(event.section == 'balances') {
+        switch (event.method) {
+          case "NewAccount":
+            mongo.balancesNewAccount(event.data);
+            break;
+          case "ReapedAccount":
+            mongo.balancesReapedAccount(event.data);
+            break;
+          case "Transfer":
+            mongo.balancesTransfer(event.data);
+            break;
+        }
       }
 
 
