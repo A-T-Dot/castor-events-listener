@@ -165,6 +165,7 @@ mongo.tcxProposed = async function(data) {
   // proposed amount like stake not invest? where money go?
 
   let value = {
+    _id: proposer + tcxId + nodeId,
     proposer,
     tcxId,
     nodeId,
