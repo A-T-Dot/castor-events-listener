@@ -155,7 +155,7 @@ async function main() {
             mongo.nodeTransferred(event.data);
             break;
         }
-      } else if(event.section == 'ge') {
+      } else if (event.section == "ge") {
         switch (event.method) {
           case "Created":
             mongo.geCreated(event.data);
@@ -167,7 +167,7 @@ async function main() {
             mongo.geInvested(event.data);
             break;
         }
-      } else if(event.section == 'tcx') {
+      } else if (event.section == "tcx") {
         switch (event.method) {
           case "Created":
             mongo.tcxCreated(event.data);
@@ -194,8 +194,7 @@ async function main() {
             mongo.tcxClaimed(event.data);
             break;
         }
-
-      } else if(event.section == 'nonTransferAssets') {
+      } else if (event.section == "nonTransferAssets") {
         switch (event.method) {
           case "Created":
             mongo.nonTransferAssetsCreated(event.data);
@@ -207,7 +206,7 @@ async function main() {
             mongo.nonTransferAssetsBurned(event.data);
             break;
         }
-      } else if(event.section == 'balances') {
+      } else if (event.section == "balances") {
         switch (event.method) {
           case "NewAccount":
             mongo.balancesNewAccount(event.data);
@@ -219,7 +218,7 @@ async function main() {
             mongo.balancesTransfer(event.data);
             break;
         }
-      } else if(event.section == 'interaction') {
+      } else if (event.section == "interaction") {
         switch (event.method) {
           case "Liked":
             mongo.interactionLiked(data);
@@ -232,6 +231,12 @@ async function main() {
             break;
           case "Reported":
             mongo.interactionReported(data);
+            break;
+        }
+      } else if (event.section == "activity") {
+        switch (event.method) {
+          case "FeePayed":
+            mongo.activityFeePayed(data);
             break;
         }
       }

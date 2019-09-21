@@ -486,4 +486,21 @@ mongo.interactionReported = async function(data) {
   // await db.collection("nodes").updateOne(query, newValue);
 };
 
+mongo.activityFeePayed = async function(data) {
+  let accountId = data[0].toString();
+  let energy = data[1].toNumber();
+  let balance = data[2].toNumber();
+
+  let query = {
+    accountId: accountId
+  };
+
+  let newValue = {
+    $set: { accountId: accountId },
+    $inc: { "0": -energy, balance: -balance },
+  };
+
+  await db.collection("accounts").updateOne(query, newValue, { upsert: true });
+}
+
 module.exports = mongo;
