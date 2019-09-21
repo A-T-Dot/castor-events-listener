@@ -221,22 +221,25 @@ async function main() {
       } else if (event.section == "interaction") {
         switch (event.method) {
           case "Liked":
-            mongo.interactionLiked(data);
+            mongo.interactionLiked(event.data);
             break;
           case "Admired":
-            mongo.interactionAdmired(data);
+            mongo.interactionAdmired(event.data);
             break;
           case "Granted":
-            mongo.interactionGranted(data);
+            mongo.interactionGranted(event.data);
             break;
           case "Reported":
-            mongo.interactionReported(data);
+            mongo.interactionReported(event.data);
             break;
         }
       } else if (event.section == "activity") {
         switch (event.method) {
           case "FeePayed":
-            mongo.activityFeePayed(data);
+            mongo.activityFeePayed(event.data);
+            break;
+          case "EnergyRecovered":
+            mongo.activtyEnergyRecovered(event.data);
             break;
         }
       }

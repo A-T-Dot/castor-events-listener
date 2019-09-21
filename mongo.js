@@ -503,4 +503,20 @@ mongo.activityFeePayed = async function(data) {
   await db.collection("accounts").updateOne(query, newValue, { upsert: true });
 }
 
+mongo.activtyEnergyRecovered = async function(data) {
+  let accountId = data[0].toString();
+  let energy = data[1].toNumber();
+
+  let query = {
+    accountId: accountId
+  };
+
+  let newValue = {
+    $set: { accountId: accountId },
+    $inc: { "0": energy }
+  };
+
+  await db.collection("accounts").updateOne(query, newValue, { upsert: true });  
+}
+
 module.exports = mongo;
