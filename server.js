@@ -129,12 +129,12 @@ async function main() {
       const types = event.typeDef;
 
       // filter event section
-      if (
-        !(eventsFilter.includes(event.section.toString()) ||
-        eventsFilter.includes("all"))
-      ) {
-        // return;
-      }
+      // if (
+      //   !(eventsFilter.includes(event.section.toString()) ||
+      //   eventsFilter.includes("all"))
+      // ) {
+      //   // return;
+      // }
 
       // show what we are busy with
       console.log(
