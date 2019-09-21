@@ -328,6 +328,8 @@ mongo.nonTransferAssetsCreated = async function(data) {
   // TODO: 
 }
 
+let assetIdToString = ['energy', 'activity', 'reputation']
+
 mongo.nonTransferAssetsMinted = async function(data) {
   let assetId = data[0].toString();
   let accountId = data[1].toString();
@@ -338,7 +340,7 @@ mongo.nonTransferAssetsMinted = async function(data) {
   };
 
   let newValue = {
-    $inc: { [`${assetId}`]: balance }
+    $inc: { [`${assetIdToString[assetId]}`]: balance }
   };
 
   await db.collection("accounts").updateOne(query, newValue, { upsert: true});
@@ -354,8 +356,8 @@ mongo.nonTransferAssetsBurned = async function(data) {
   };
 
   let newValue = {
-    $set: { accountId: accountId},
-    $inc: { [`${assetId}`]: -balance }
+    $set: { accountId: accountId },
+    $inc: { [`${assetIdToString[assetId]}`]: -balance }
   };
 
   await db.collection("accounts").updateOne(query, newValue, { upsert: true });
@@ -497,7 +499,7 @@ mongo.activityFeePayed = async function(data) {
 
   let newValue = {
     $set: { accountId: accountId },
-    $inc: { "0": -energy, balance: -balance },
+    $inc: { energy: -10000, balance: -balance },
   };
 
   await db.collection("accounts").updateOne(query, newValue, { upsert: true });
@@ -513,7 +515,7 @@ mongo.activtyEnergyRecovered = async function(data) {
 
   let newValue = {
     $set: { accountId: accountId },
-    $inc: { "0": energy }
+    $inc: { energy: 0 }
   };
 
   await db.collection("accounts").updateOne(query, newValue, { upsert: true });  
