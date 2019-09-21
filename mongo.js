@@ -65,6 +65,8 @@ mongo.nodeCreated = async function(data) {
     nodeId,
     nodeType,
     sources,
+    likeCount: 0,
+    admireCount: 0,
     referredBy: []
   });
 
@@ -431,5 +433,57 @@ mongo.balancesMint = async function(accountId, balance) {
     .collection("accounts")
     .updateOne(query, newValue, { upsert: true });
 }
+
+mongo.interactionLiked = async function(data) {
+  let nodeId = data[0].toString();
+  let accountId = data[1].toString();
+  let likeId = data[2].toString();
+  let likedCount = data[3].toNumber();
+
+
+  let query = { nodeId: nodeId };
+  let newValue = { $inc: { likeCount: 1 } };
+
+  await db.collection("nodes").updateOne(query, newValue);
+  
+};
+
+mongo.interactionAdmired = async function(data) {
+  let nodeId = data[0].toString();
+  let accountIdFrom = data[1].toString();
+  let accountIdTo = data[2].toString();
+  let admireId = data[3].toString();
+  let admireCount = data[4].toNumber();
+
+  let query = { nodeId: nodeId };
+  let newValue = { $inc: { admireCount: 1 } };
+
+  await db.collection("nodes").updateOne(query, newValue);
+};
+
+mongo.interactionGranted = async function(data) {
+  let nodeId = data[0].toString();
+  let accountId = data[1].toString();
+  let likeId = data[2].toString();
+  let likedCount = data[3].toNumber();
+
+  let query = { nodeId: nodeId };
+  let newValue = { $inc: { likeCount: 1 } };
+
+  await db.collection("nodes").updateOne(query, newValue);
+};
+
+mongo.interactionReported = async function(data) {
+  // TODO
+  // let nodeId = data[0].toString();
+  // let accountId = data[1].toString();
+  // let likeId = data[2].toString();
+  // let likedCount = data[3].toNumber();
+
+  // let query = { nodeId: nodeId };
+  // let newValue = { $inc: { likeCount: 1 } };
+
+  // await db.collection("nodes").updateOne(query, newValue);
+};
 
 module.exports = mongo;
