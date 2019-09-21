@@ -65,6 +65,8 @@ mongo.nodeCreated = async function(data) {
     nodeId,
     nodeType,
     sources,
+    likeCount: 0,
+    admireCount: 0,
     referredBy: []
   });
 
@@ -430,6 +432,91 @@ mongo.balancesMint = async function(accountId, balance) {
   await db
     .collection("accounts")
     .updateOne(query, newValue, { upsert: true });
+}
+
+mongo.interactionLiked = async function(data) {
+  let nodeId = data[0].toString();
+  let accountId = data[1].toString();
+  let likeId = data[2].toString();
+  let likedCount = data[3].toNumber();
+
+
+  let query = { nodeId: nodeId };
+  let newValue = { $inc: { likeCount: 1 } };
+
+  await db.collection("nodes").updateOne(query, newValue);
+  
+};
+
+mongo.interactionAdmired = async function(data) {
+  let nodeId = data[0].toString();
+  let accountIdFrom = data[1].toString();
+  let accountIdTo = data[2].toString();
+  let admireId = data[3].toString();
+  let admireCount = data[4].toNumber();
+
+  let query = { nodeId: nodeId };
+  let newValue = { $inc: { admireCount: 1 } };
+
+  await db.collection("nodes").updateOne(query, newValue);
+};
+
+mongo.interactionGranted = async function(data) {
+  let nodeId = data[0].toString();
+  let accountId = data[1].toString();
+  let likeId = data[2].toString();
+  let likedCount = data[3].toNumber();
+
+  let query = { nodeId: nodeId };
+  let newValue = { $inc: { likeCount: 1 } };
+
+  await db.collection("nodes").updateOne(query, newValue);
+};
+
+mongo.interactionReported = async function(data) {
+  // TODO
+  // let nodeId = data[0].toString();
+  // let accountId = data[1].toString();
+  // let likeId = data[2].toString();
+  // let likedCount = data[3].toNumber();
+
+  // let query = { nodeId: nodeId };
+  // let newValue = { $inc: { likeCount: 1 } };
+
+  // await db.collection("nodes").updateOne(query, newValue);
+};
+
+mongo.activityFeePayed = async function(data) {
+  let accountId = data[0].toString();
+  let energy = data[1].toNumber();
+  let balance = data[2].toNumber();
+
+  let query = {
+    accountId: accountId
+  };
+
+  let newValue = {
+    $set: { accountId: accountId },
+    $inc: { "0": -energy, balance: -balance },
+  };
+
+  await db.collection("accounts").updateOne(query, newValue, { upsert: true });
+}
+
+mongo.activtyEnergyRecovered = async function(data) {
+  let accountId = data[0].toString();
+  let energy = data[1].toNumber();
+
+  let query = {
+    accountId: accountId
+  };
+
+  let newValue = {
+    $set: { accountId: accountId },
+    $inc: { "0": energy }
+  };
+
+  await db.collection("accounts").updateOne(query, newValue, { upsert: true });  
 }
 
 module.exports = mongo;
