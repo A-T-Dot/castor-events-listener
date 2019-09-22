@@ -233,7 +233,7 @@ async function main() {
             mongo.interactionReported(event.data);
             break;
         }
-      } else if (event.section == "activity") {
+      } else if (event.section == "activities") {
         switch (event.method) {
           case "FeePayed":
             mongo.activityFeePayed(event.data);
