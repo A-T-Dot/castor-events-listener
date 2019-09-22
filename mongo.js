@@ -159,10 +159,10 @@ mongo.tcxProposed = async function(data) {
   let proposer = data[0].toString();
   let tcxId = data[1].toString();
   let nodeId = data[2].toString();
-  let amount = data[3].toNumber();
-  let quota = data[4].toNumber();
-  let actionId = data[5].toString();
-  let challengeBefore = data[6].toNumber();
+  // let amount = data[3].toNumber();
+  // let quota = data[4].toString();
+  // let actionId = data[5].toString();
+  let challengeBefore = data[3].toNumber();
 
   // proposed amount like stake not invest? where money go?
 
@@ -171,11 +171,11 @@ mongo.tcxProposed = async function(data) {
     proposer,
     tcxId,
     nodeId,
-    amountLeft: amount,
-    quotaLeft: quota,
-    amountRight: 0,
-    quotaRight: 0,
-    actionId,
+    // amountLeft: amount,
+    // quotaLeft: quota,
+    // amountRight: 0,
+    // quotaRight: 0,
+    // actionId,
     challengeBefore,
     status: 0,
     updatedAt: now,
@@ -192,9 +192,9 @@ mongo.tcxChallenged = async function(data) {
   let challengeId = data[1].toString();
   let tcxId = data[2].toString();
   let nodeId = data[3].toString();
-  let amount = data[4].toNumber();
-  let quota = data[5].toNumber();
-  let voteBefore = data[6].toNumber();
+  // let amount = data[4].toNumber();
+  // let quota = data[5].toNumber();
+  let voteBefore = data[4].toNumber();
 
   let query = {
     tcxId: tcxId,
@@ -208,8 +208,8 @@ mongo.tcxChallenged = async function(data) {
       challenger,
       challengeId,
       voteBefore,
-      amountRight: amount,
-      quotaRight: quota,
+      // amountRight: amount,
+      // quotaRight: quota,
       voters: [],
       updatedAt: now
     }
@@ -223,9 +223,9 @@ mongo.tcxVoted = async function(data) {
 
   let voter = data[0].toString();
   let challengeId = data[1].toString();
-  let amount = data[2].toNumber();
-  let quota = data[3].toNumber();
-  let whitelist = data[4].toString();
+  // let amount = data[2].toNumber();
+  // let quota = data[3].toNumber();
+  let whitelist = data[2].toString();
   
   let query = {
     challengeId: challengeId,
@@ -235,13 +235,13 @@ mongo.tcxVoted = async function(data) {
   let newValue;
   if(whitelist == "true") {
     newValue = {
-      $inc: { amountLeft: amount, quotaLeft: quota },
+      // $inc: { amountLeft: amount, quotaLeft: quota },
       $push: { voters: voter },
       $set: { updatedAt: now}
     }
   } else {
     newValue = {
-      $inc: { amountRight: amount, quotaRight: quota },
+      // $inc: { amountRight: amount, quotaRight: quota },
       $push: { voters: voter },
       $set: { updatedAt: now }
     };
@@ -328,6 +328,8 @@ mongo.nonTransferAssetsCreated = async function(data) {
   // TODO: 
 }
 
+let assetIdToString = ['energy', 'activity', 'reputation']
+
 mongo.nonTransferAssetsMinted = async function(data) {
   let assetId = data[0].toString();
   let accountId = data[1].toString();
@@ -338,7 +340,7 @@ mongo.nonTransferAssetsMinted = async function(data) {
   };
 
   let newValue = {
-    $inc: { [`${assetId}`]: balance }
+    $inc: { [`${assetIdToString[assetId]}`]: balance }
   };
 
   await db.collection("accounts").updateOne(query, newValue, { upsert: true});
@@ -354,8 +356,8 @@ mongo.nonTransferAssetsBurned = async function(data) {
   };
 
   let newValue = {
-    $set: { accountId: accountId},
-    $inc: { [`${assetId}`]: -balance }
+    $set: { accountId: accountId },
+    $inc: { [`${assetIdToString[assetId]}`]: -balance }
   };
 
   await db.collection("accounts").updateOne(query, newValue, { upsert: true });
@@ -497,7 +499,7 @@ mongo.activityFeePayed = async function(data) {
 
   let newValue = {
     $set: { accountId: accountId },
-    $inc: { "0": -energy, balance: -balance },
+    $inc: { energy: -10000, balance: -balance },
   };
 
   await db.collection("accounts").updateOne(query, newValue, { upsert: true });
@@ -513,7 +515,7 @@ mongo.activtyEnergyRecovered = async function(data) {
 
   let newValue = {
     $set: { accountId: accountId },
-    $inc: { "0": energy }
+    $inc: { energy: 0 }
   };
 
   await db.collection("accounts").updateOne(query, newValue, { upsert: true });  
