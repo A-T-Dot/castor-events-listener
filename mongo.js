@@ -159,10 +159,10 @@ mongo.tcxProposed = async function(data) {
   let proposer = data[0].toString();
   let tcxId = data[1].toString();
   let nodeId = data[2].toString();
-  let amount = data[3].toNumber();
-  let quota = data[4].toNumber();
-  let actionId = data[5].toString();
-  let challengeBefore = data[6].toNumber();
+  // let amount = data[3].toNumber();
+  // let quota = data[4].toString();
+  // let actionId = data[5].toString();
+  let challengeBefore = data[3].toNumber();
 
   // proposed amount like stake not invest? where money go?
 
@@ -171,11 +171,11 @@ mongo.tcxProposed = async function(data) {
     proposer,
     tcxId,
     nodeId,
-    amountLeft: amount,
-    quotaLeft: quota,
-    amountRight: 0,
-    quotaRight: 0,
-    actionId,
+    // amountLeft: amount,
+    // quotaLeft: quota,
+    // amountRight: 0,
+    // quotaRight: 0,
+    // actionId,
     challengeBefore,
     status: 0,
     updatedAt: now,
@@ -192,9 +192,9 @@ mongo.tcxChallenged = async function(data) {
   let challengeId = data[1].toString();
   let tcxId = data[2].toString();
   let nodeId = data[3].toString();
-  let amount = data[4].toNumber();
-  let quota = data[5].toNumber();
-  let voteBefore = data[6].toNumber();
+  // let amount = data[4].toNumber();
+  // let quota = data[5].toNumber();
+  let voteBefore = data[4].toNumber();
 
   let query = {
     tcxId: tcxId,
@@ -208,8 +208,8 @@ mongo.tcxChallenged = async function(data) {
       challenger,
       challengeId,
       voteBefore,
-      amountRight: amount,
-      quotaRight: quota,
+      // amountRight: amount,
+      // quotaRight: quota,
       voters: [],
       updatedAt: now
     }
@@ -223,9 +223,9 @@ mongo.tcxVoted = async function(data) {
 
   let voter = data[0].toString();
   let challengeId = data[1].toString();
-  let amount = data[2].toNumber();
-  let quota = data[3].toNumber();
-  let whitelist = data[4].toString();
+  // let amount = data[2].toNumber();
+  // let quota = data[3].toNumber();
+  let whitelist = data[2].toString();
   
   let query = {
     challengeId: challengeId,
@@ -235,13 +235,13 @@ mongo.tcxVoted = async function(data) {
   let newValue;
   if(whitelist == "true") {
     newValue = {
-      $inc: { amountLeft: amount, quotaLeft: quota },
+      // $inc: { amountLeft: amount, quotaLeft: quota },
       $push: { voters: voter },
       $set: { updatedAt: now}
     }
   } else {
     newValue = {
-      $inc: { amountRight: amount, quotaRight: quota },
+      // $inc: { amountRight: amount, quotaRight: quota },
       $push: { voters: voter },
       $set: { updatedAt: now }
     };
